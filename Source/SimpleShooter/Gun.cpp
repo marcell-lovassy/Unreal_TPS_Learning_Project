@@ -38,7 +38,7 @@ void AGun::Tick(float DeltaTime)
 void AGun::PullTrigger()
 {
 	UE_LOG(LogTemp, Warning, TEXT("%s is shooting"), *GetName());
-	UParticleSystemComponent* mf = UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, FName("MuzzleFlashSocket"));
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, FName("MuzzleFlashSocket"));
 	
 	APawn* ownerPawn = Cast<APawn>(GetOwner());
 	if (ownerPawn == nullptr) return;
@@ -57,7 +57,9 @@ void AGun::PullTrigger()
 	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation, endPoint, ECollisionChannel::ECC_GameTraceChannel1);
 	if (isHit)
 	{
-		DrawDebugPoint(GetWorld(), hitResult.ImpactPoint, 20, FColor::Red, true);
+		FVector shotDirection = -viewPointRotation.Vector();
+		//DrawDebugPoint(GetWorld(), hitResult.ImpactPoint, 20, FColor::Red, true);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, hitResult.ImpactPoint, shotDirection.Rotation());
 	}
 
 	//DrawDebugCamera(GetWorld(), viewPointLocation, viewPointRotation, 90, 2.f, FColor::Red, true);
