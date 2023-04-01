@@ -32,6 +32,8 @@ protected:
 	class UInputAction* LookControllerAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	class UInputAction* JumpAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	class UInputAction* ShootAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	float RotationRate = 50;
 
@@ -58,4 +60,5 @@ private:
 	void Look(const FInputActionValue& value);
 	void LookController(const FInputActionValue& value);
 	void Jump(const FInputActionValue& value);
+	void Shoot(const FInputActionValue& value);
 };

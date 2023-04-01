@@ -3,6 +3,9 @@
 
 #include "Gun.h"
 #include "Components/SkeletalMeshComponent.h"
+#include <Kismet/GameplayStatics.h>
+#include "Particles/ParticleSystemComponent.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AGun::AGun()
@@ -16,6 +19,7 @@ AGun::AGun()
 	Mesh->SetupAttachment(Root);
 
 }
+
 
 // Called when the game starts or when spawned
 void AGun::BeginPlay()
@@ -31,3 +35,30 @@ void AGun::Tick(float DeltaTime)
 
 }
 
+void AGun::PullTrigger()
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s is shooting"), *GetName());
+	UParticleSystemComponent* mf = UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, FName("MuzzleFlashSocket"));
+	
+	APawn* ownerPawn = Cast<APawn>(GetOwner());
+	if (ownerPawn == nullptr) return;
+
+	AController* ownerController = ownerPawn->GetController();
+	if (ownerController == nullptr) return;
+
+	FVector viewPointLocation;
+	FRotator viewPointRotation;
+
+	ownerController->GetPlayerViewPoint(viewPointLocation, viewPointRotation);
+	FVector endPoint = viewPointLocation + viewPointRotation.Vector() * MaxRange;
+
+	//ECC_GameTraceChannel1
+	FHitResult hitResult;
+	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation, endPoint, ECollisionChannel::ECC_GameTraceChannel1);
+	if (isHit)
+	{
+		DrawDebugPoint(GetWorld(), hitResult.ImpactPoint, 20, FColor::Red, true);
+	}
+
+	//DrawDebugCamera(GetWorld(), viewPointLocation, viewPointRotation, 90, 2.f, FColor::Red, true);
+}
