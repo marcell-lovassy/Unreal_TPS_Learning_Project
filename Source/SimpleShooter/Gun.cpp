@@ -3,6 +3,11 @@
 
 #include "Gun.h"
 #include "Components/SkeletalMeshComponent.h"
+#include <Kismet/GameplayStatics.h>
+#include "Particles/ParticleSystemComponent.h"
+#include "DrawDebugHelpers.h"
+#include "GameFramework/Character.h"
+#include "Engine/DamageEvents.h"
 
 // Sets default values
 AGun::AGun()
@@ -16,6 +21,7 @@ AGun::AGun()
 	Mesh->SetupAttachment(Root);
 
 }
+
 
 // Called when the game starts or when spawned
 void AGun::BeginPlay()
@@ -31,3 +37,44 @@ void AGun::Tick(float DeltaTime)
 
 }
 
+void AGun::PullTrigger()
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s is shooting"), *GetName());
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, FName("MuzzleFlashSocket"));
+	
+	APawn* ownerPawn = Cast<APawn>(GetOwner());
+	if (ownerPawn == nullptr) return;
+
+	AController* ownerController = ownerPawn->GetController();
+	if (ownerController == nullptr) return;
+
+	FVector viewPointLocation;
+	FRotator viewPointRotation;
+
+	ownerController->GetPlayerViewPoint(viewPointLocation, viewPointRotation);
+	FVector endPoint = viewPointLocation + viewPointRotation.Vector() * MaxRange;
+
+	//ECC_GameTraceChannel1
+	FHitResult hitResult;
+	//add 200 to the start location to be able to 
+	//start the lineTrace next to the player not behind
+	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation + viewPointRotation.Vector() * 200.f, endPoint, ECollisionChannel::ECC_GameTraceChannel1);
+	if (isHit)
+	{
+		FVector shotDirection = -viewPointRotation.Vector();
+		FPointDamageEvent DamageEvent = FPointDamageEvent(Damage, hitResult, shotDirection, nullptr);
+
+		AActor* hitActor = hitResult.GetActor();
+		if(hitActor)
+		{
+			ACharacter* character = Cast<ACharacter>(hitActor);
+			UParticleSystem* particlesToSpawn;
+			particlesToSpawn = character ? ImpactEffectCharacter : ImpactEffectWorld;
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), particlesToSpawn, hitResult.ImpactPoint, shotDirection.Rotation());
+			
+			hitActor->TakeDamage(Damage, DamageEvent, ownerController, this);
+		}
+		//DrawDebugPoint(GetWorld(), viewPointLocation + viewPointRotation.Vector() * 300.f, 20, FColor::Red, true);
+	}
+	//DrawDebugCamera(GetWorld(), viewPointLocation, viewPointRotation, 90, 2.f, FColor::Red, true);
+}

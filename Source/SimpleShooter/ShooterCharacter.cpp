@@ -5,6 +5,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Gun.h"
 
 AShooterCharacter::AShooterCharacter()
@@ -16,6 +17,8 @@ AShooterCharacter::AShooterCharacter()
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Health = MaxHealth;
 
 	ShooterPlayerController = Cast<APlayerController>(GetController());
 
@@ -30,7 +33,14 @@ void AShooterCharacter::BeginPlay()
 	}
 
 	Gun = GetWorld()->SpawnActor<AGun>(GunClass);
-	
+	GetMesh()->HideBoneByName(FName("weapon_r"), EPhysBodyOp::PBO_None);
+
+	Gun->AttachToComponent(
+		GetMesh(), 
+		FAttachmentTransformRules::KeepRelativeTransform, 
+		FName("WeaponSocket"));
+
+	Gun->SetOwner(this);
 }
 
 void AShooterCharacter::Tick(float DeltaTime)
@@ -49,14 +59,31 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		enhancedInputComponent->BindAction(LookMouseAction, ETriggerEvent::Triggered, this, &AShooterCharacter::Look);
 		enhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AShooterCharacter::Jump);
 		enhancedInputComponent->BindAction(LookControllerAction, ETriggerEvent::Triggered, this, &AShooterCharacter::LookController);
+		enhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AShooterCharacter::Shoot);
 	}
+}
+
+float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float damageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	damageToApply = FMath::Min(Health, damageToApply);
+	Health -= damageToApply;
+
+	if(Health <= 0)
+	{
+		GetCapsuleComponent()->DestroyComponent();
+	}
+	return damageToApply;
+}
+
+bool AShooterCharacter::IsDead() const
+{
+	return Health <= 0.f;
 }
 
 void AShooterCharacter::Move(const FInputActionValue& value)
 {
-	//now the Y is the forward-backward direction and the X is the sideways direction
 	const FVector moveDirection = value.Get<FVector>();
-	//UE_LOG(LogTemp, Warning, TEXT("Movement: (%f ; %f)"), moveDirection.X, moveDirection.Y);
 	AddMovementInput(GetActorForwardVector() * moveDirection.Y);
 	AddMovementInput(GetActorRightVector() * moveDirection.X);
 }
@@ -78,4 +105,9 @@ void AShooterCharacter::LookController(const FInputActionValue& value)
 void AShooterCharacter::Jump(const FInputActionValue& value)
 {
 	ACharacter::Jump();
+}
+
+void AShooterCharacter::Shoot(const FInputActionValue& value)
+{
+	Gun->PullTrigger();
 }
