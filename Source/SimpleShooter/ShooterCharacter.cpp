@@ -6,12 +6,13 @@
 #include "EnhancedInputComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Gun.h"
 
 AShooterCharacter::AShooterCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 void AShooterCharacter::BeginPlay()
@@ -41,12 +42,14 @@ void AShooterCharacter::BeginPlay()
 		FName("WeaponSocket"));
 
 	Gun->SetOwner(this);
+
+	camera = FindComponentByClass<UCameraComponent>();
+	
 }
 
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -81,6 +84,15 @@ bool AShooterCharacter::IsDead() const
 	return Health <= 0.f;
 }
 
+float AShooterCharacter::GetCameraDistance() const
+{
+	if (camera) 
+	{
+		return FVector::Dist(camera->GetComponentLocation(), GetActorLocation());
+	}
+	return 0.f;
+}
+
 void AShooterCharacter::Move(const FInputActionValue& value)
 {
 	const FVector moveDirection = value.Get<FVector>();
@@ -109,5 +121,6 @@ void AShooterCharacter::Jump(const FInputActionValue& value)
 
 void AShooterCharacter::Shoot(const FInputActionValue& value)
 {
+	
 	Gun->PullTrigger();
 }
