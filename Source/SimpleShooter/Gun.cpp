@@ -77,7 +77,7 @@ void AGun::PullTrigger()
 			
 			hitActor->TakeDamage(Damage, DamageEvent, ownerController, this);
 		}
-		DrawDebugPoint(GetWorld(), viewPointLocation + viewPointRotation.Vector() * shooter->GetCameraDistance(), 20, FColor::Red, true);
+		//DrawDebugPoint(GetWorld(), viewPointLocation + viewPointRotation.Vector() * shooter->GetCameraDistance(), 20, FColor::Red, true);
 	}
 	//DrawDebugCamera(GetWorld(), viewPointLocation, viewPointRotation, 90, 2.f, FColor::Red, true);
 }
