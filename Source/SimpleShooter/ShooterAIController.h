@@ -9,6 +9,10 @@
 /**
  * 
  */
+
+class UBehaviorTree;
+class UBlackboardComponent;
+
 UCLASS()
 class SIMPLESHOOTER_API AShooterAIController : public AAIController
 {
@@ -23,6 +27,11 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	/*UPROPERTY(EditAnywhere)
+	float AcceptanceRadius = 200.f;*/
+
 	UPROPERTY(EditAnywhere)
-	float AcceptanceRadius = 200.f;
+	UBehaviorTree* AIBehavior;
+
+	UBlackboardComponent* blackboardComponent;
 };
