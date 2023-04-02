@@ -6,6 +6,7 @@
 #include <Kismet/GameplayStatics.h>
 #include "Particles/ParticleSystemComponent.h"
 #include "DrawDebugHelpers.h"
+#include "GameFramework/Character.h"
 
 // Sets default values
 AGun::AGun()
@@ -58,9 +59,17 @@ void AGun::PullTrigger()
 	if (isHit)
 	{
 		FVector shotDirection = -viewPointRotation.Vector();
+		
+		ACharacter* character = Cast<ACharacter>(hitResult.GetActor());
+		if (character) 
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffectCharacter, hitResult.ImpactPoint, shotDirection.Rotation());
+		}
+		else
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffectWorld, hitResult.ImpactPoint, shotDirection.Rotation());
+		}
 		//DrawDebugPoint(GetWorld(), hitResult.ImpactPoint, 20, FColor::Red, true);
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, hitResult.ImpactPoint, shotDirection.Rotation());
 	}
-
 	//DrawDebugCamera(GetWorld(), viewPointLocation, viewPointRotation, 90, 2.f, FColor::Red, true);
 }
