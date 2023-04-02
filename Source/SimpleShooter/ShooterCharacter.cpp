@@ -17,6 +17,8 @@ void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	Health = MaxHealth;
+
 	ShooterPlayerController = Cast<APlayerController>(GetController());
 
 	if(ShooterPlayerController)
@@ -58,6 +60,19 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		enhancedInputComponent->BindAction(LookControllerAction, ETriggerEvent::Triggered, this, &AShooterCharacter::LookController);
 		enhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AShooterCharacter::Shoot);
 	}
+}
+
+float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float damageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	damageToApply = FMath::Min(Health, damageToApply);
+	Health -= damageToApply;
+	return damageToApply;
+}
+
+bool AShooterCharacter::IsDead() const
+{
+	return Health <= 0.f;
 }
 
 void AShooterCharacter::Move(const FInputActionValue& value)

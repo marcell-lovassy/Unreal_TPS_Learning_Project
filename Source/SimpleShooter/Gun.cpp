@@ -7,6 +7,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Character.h"
+#include "Engine/DamageEvents.h"
 
 // Sets default values
 AGun::AGun()
@@ -55,21 +56,25 @@ void AGun::PullTrigger()
 
 	//ECC_GameTraceChannel1
 	FHitResult hitResult;
-	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation, endPoint, ECollisionChannel::ECC_GameTraceChannel1);
+	//add 200 to the start location to be able to 
+	//start the lineTrace next to the player not behind
+	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation + viewPointRotation.Vector() * 200.f, endPoint, ECollisionChannel::ECC_GameTraceChannel1);
 	if (isHit)
 	{
 		FVector shotDirection = -viewPointRotation.Vector();
-		
-		ACharacter* character = Cast<ACharacter>(hitResult.GetActor());
-		if (character) 
+		FPointDamageEvent DamageEvent = FPointDamageEvent(Damage, hitResult, shotDirection, nullptr);
+
+		AActor* hitActor = hitResult.GetActor();
+		if(hitActor)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffectCharacter, hitResult.ImpactPoint, shotDirection.Rotation());
+			ACharacter* character = Cast<ACharacter>(hitActor);
+			UParticleSystem* particlesToSpawn;
+			particlesToSpawn = character ? ImpactEffectCharacter : ImpactEffectWorld;
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), particlesToSpawn, hitResult.ImpactPoint, shotDirection.Rotation());
+			
+			hitActor->TakeDamage(Damage, DamageEvent, ownerController, this);
 		}
-		else
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffectWorld, hitResult.ImpactPoint, shotDirection.Rotation());
-		}
-		//DrawDebugPoint(GetWorld(), hitResult.ImpactPoint, 20, FColor::Red, true);
+		//DrawDebugPoint(GetWorld(), viewPointLocation + viewPointRotation.Vector() * 300.f, 20, FColor::Red, true);
 	}
 	//DrawDebugCamera(GetWorld(), viewPointLocation, viewPointRotation, 90, 2.f, FColor::Red, true);
 }

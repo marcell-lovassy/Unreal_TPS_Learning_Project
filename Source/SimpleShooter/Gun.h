@@ -27,18 +27,21 @@ public:
 
 private:
 
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* Root;
-	UPROPERTY(VisibleAnywhere)
-	USkeletalMeshComponent* Mesh;
-	UPROPERTY(EditAnywhere)
-	UParticleSystem* MuzzleFlash;
-	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactEffectWorld; 
-	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactEffectCharacter;
-
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly, Category = "GunProperties")
+	float Damage = 10.f;
+	UPROPERTY(EditDefaultsOnly, Category = "GunProperties")
 	float MaxRange = 10000;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	USceneComponent* Root;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	USkeletalMeshComponent* Mesh;
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UParticleSystem* MuzzleFlash;
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UParticleSystem* ImpactEffectWorld; 
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UParticleSystem* ImpactEffectCharacter;
 
 };
