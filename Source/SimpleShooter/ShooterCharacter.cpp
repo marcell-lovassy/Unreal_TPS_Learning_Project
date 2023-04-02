@@ -121,6 +121,5 @@ void AShooterCharacter::Jump(const FInputActionValue& value)
 
 void AShooterCharacter::Shoot(const FInputActionValue& value)
 {
-	
 	Gun->PullTrigger();
 }

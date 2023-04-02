@@ -18,12 +18,11 @@ void AShooterAIController::Tick(float DeltaSeconds)
 	if (LineOfSightTo(PlayerPawn)) 
 	{
 		SetFocus(PlayerPawn);
-		MoveToActor(PlayerPawn, 200.f);
+		MoveToActor(PlayerPawn, AcceptanceRadius);
 	}
 	else 
 	{
 		ClearFocus(EAIFocusPriority::Gameplay);
 		StopMovement();
 	}
-
 }

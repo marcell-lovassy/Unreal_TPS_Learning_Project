@@ -40,7 +40,6 @@ void AGun::Tick(float DeltaTime)
 
 void AGun::PullTrigger()
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s is shooting"), *GetName());
 	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, FName("MuzzleFlashSocket"));
 	
 	APawn* ownerPawn = Cast<APawn>(GetOwner());
@@ -57,10 +56,8 @@ void AGun::PullTrigger()
 	ownerController->GetPlayerViewPoint(viewPointLocation, viewPointRotation);
 	FVector endPoint = viewPointLocation + viewPointRotation.Vector() * MaxRange;
 
-	//ECC_GameTraceChannel1
 	FHitResult hitResult;
-	//add 200 to the start location to be able to 
-	//start the lineTrace next to the player not behind
+	
 	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation + viewPointRotation.Vector() * shooter->GetCameraDistance(), endPoint, ECollisionChannel::ECC_GameTraceChannel1);
 	if (isHit)
 	{
