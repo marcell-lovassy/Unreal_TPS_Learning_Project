@@ -5,6 +5,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Gun.h"
 
 AShooterCharacter::AShooterCharacter()
@@ -67,6 +68,11 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	float damageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	damageToApply = FMath::Min(Health, damageToApply);
 	Health -= damageToApply;
+
+	if(Health <= 0)
+	{
+		GetCapsuleComponent()->DestroyComponent();
+	}
 	return damageToApply;
 }
 
