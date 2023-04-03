@@ -33,15 +33,33 @@ void AShooterCharacter::BeginPlay()
 
 	}
 
-	Gun = GetWorld()->SpawnActor<AGun>(GunClass);
+	for (TSubclassOf<AGun> GunClass : GunClasses) 
+	{
+		Guns.Add(GetWorld()->SpawnActor<AGun>(GunClass));
+	}
+
 	GetMesh()->HideBoneByName(FName("weapon_r"), EPhysBodyOp::PBO_None);
 
-	Gun->AttachToComponent(
+	for (AGun* Gun : Guns) 
+	{
+		Gun->AttachToComponent(
+			GetMesh(),
+			FAttachmentTransformRules::KeepRelativeTransform,
+			FName("WeaponSocket"));
+
+		Gun->SetOwner(this);
+
+		Gun->SetActorHiddenInGame(true);
+	}
+
+	Guns[ActiveWeaponIndex]->SetActorHiddenInGame(false);
+
+	/*Guns[ActiveWeaponIndex]->AttachToComponent(
 		GetMesh(), 
 		FAttachmentTransformRules::KeepRelativeTransform, 
 		FName("WeaponSocket"));
 
-	Gun->SetOwner(this);
+	Guns[ActiveWeaponIndex]->SetOwner(this);*/
 
 	camera = FindComponentByClass<UCameraComponent>();
 	
@@ -63,6 +81,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		enhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AShooterCharacter::Jump);
 		enhancedInputComponent->BindAction(LookControllerAction, ETriggerEvent::Triggered, this, &AShooterCharacter::LookController);
 		enhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AShooterCharacter::Shoot);
+		enhancedInputComponent->BindAction(SwitchWeaponAction, ETriggerEvent::Started, this, &AShooterCharacter::SwitchWeapon);
 	}
 }
 
@@ -89,6 +108,11 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 bool AShooterCharacter::IsDead() const
 {
 	return Health <= 0.f;
+}
+
+float AShooterCharacter::GetHealthPercent() const
+{
+	return Health / MaxHealth;
 }
 
 float AShooterCharacter::GetCameraDistance() const
@@ -126,7 +150,30 @@ void AShooterCharacter::Jump(const FInputActionValue& value)
 	ACharacter::Jump();
 }
 
+void AShooterCharacter::SwitchWeapon(const FInputActionValue& value)
+{
+	const float SwitchInput = value.Get<float>();
+
+	Guns[ActiveWeaponIndex]->SetActorHiddenInGame(true);
+
+	if (ActiveWeaponIndex + SwitchInput >= Guns.Num()) 
+	{
+		ActiveWeaponIndex = 0;
+	}
+	else if(ActiveWeaponIndex + SwitchInput <  0)
+	{
+		ActiveWeaponIndex = Guns.Num() - 1;
+	}
+	else 
+	{
+		ActiveWeaponIndex += SwitchInput;
+	}
+
+	Guns[ActiveWeaponIndex]->SetActorHiddenInGame(false);
+
+}
+
 void AShooterCharacter::Shoot()
 {
-	Gun->PullTrigger();
+	Guns[ActiveWeaponIndex]->PullTrigger();
 }
