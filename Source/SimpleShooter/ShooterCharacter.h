@@ -33,6 +33,8 @@ protected:
 	class UInputAction* JumpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	class UInputAction* ShootAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	class UInputAction* SwitchWeaponAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	float RotationRate = 50;
 
@@ -57,10 +59,13 @@ public:
 private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	TSubclassOf<AGun> GunClass;
+	TArray<TSubclassOf<AGun>> GunClasses;
 
 	UPROPERTY()
-	AGun* Gun;
+	TArray<AGun*> Guns;
+
+	UPROPERTY(EditAnywhere)
+	int ActiveWeaponIndex = 0;
 
 	UPROPERTY(EditDefaultsOnly)
 	float MaxHealth = 100.f;
@@ -75,4 +80,5 @@ private:
 	void Look(const FInputActionValue& value);
 	void LookController(const FInputActionValue& value);
 	void Jump(const FInputActionValue& value);
+	void SwitchWeapon(const FInputActionValue& value);
 };
