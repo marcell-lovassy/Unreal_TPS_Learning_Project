@@ -27,6 +27,20 @@ void AShooterAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	//this is now all in BTServices
+	//APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	//if (LineOfSightTo(PlayerPawn)) 
+	//{
+	//	blackboardComponent->SetValueAsVector(FName("PlayerLocation"), PlayerPawn->GetActorLocation());
+	//	//blackboardComponent->SetValueAsVector(FName("LastKnownPlayerLocation"), PlayerPawn->GetActorLocation());
+	//}
+	//else 
+	//{
+	//	blackboardComponent->ClearValue(FName("PlayerLocation"));
+	//}
+
+
+	//Code without behaviour tree
 	//APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	//if (LineOfSightTo(PlayerPawn)) 
 	//{

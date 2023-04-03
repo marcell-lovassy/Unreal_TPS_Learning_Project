@@ -119,7 +119,7 @@ void AShooterCharacter::Jump(const FInputActionValue& value)
 	ACharacter::Jump();
 }
 
-void AShooterCharacter::Shoot(const FInputActionValue& value)
+void AShooterCharacter::Shoot()
 {
 	Gun->PullTrigger();
 }
