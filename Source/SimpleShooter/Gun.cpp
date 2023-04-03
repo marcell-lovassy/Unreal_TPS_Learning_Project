@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "Engine/DamageEvents.h"
 #include "ShooterCharacter.h"
+#include <AIController.h>
 
 // Sets default values
 AGun::AGun()
@@ -46,6 +47,8 @@ void AGun::PullTrigger()
 	if (ownerPawn == nullptr) return;
 
 	AController* ownerController = ownerPawn->GetController();
+	bool isAI = Cast<AAIController>(ownerController) != nullptr;
+
 	AShooterCharacter* shooter = Cast<AShooterCharacter>(ownerPawn);
 
 	if (ownerController == nullptr) return;
@@ -57,8 +60,13 @@ void AGun::PullTrigger()
 	FVector endPoint = viewPointLocation + viewPointRotation.Vector() * MaxRange;
 
 	FHitResult hitResult;
+
+	FCollisionQueryParams collisionParams;
+
+	collisionParams.AddIgnoredActor(this);
+	collisionParams.AddIgnoredActor(GetOwner());
 	
-	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation + viewPointRotation.Vector() * shooter->GetCameraDistance(), endPoint, ECollisionChannel::ECC_GameTraceChannel1);
+	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation + viewPointRotation.Vector() * (isAI ? 1 : shooter->GetCameraDistance()), endPoint, ECollisionChannel::ECC_GameTraceChannel1, collisionParams);
 	if (isHit)
 	{
 		FVector shotDirection = -viewPointRotation.Vector();
@@ -74,7 +82,7 @@ void AGun::PullTrigger()
 			
 			hitActor->TakeDamage(Damage, DamageEvent, ownerController, this);
 		}
-		//DrawDebugPoint(GetWorld(), viewPointLocation + viewPointRotation.Vector() * shooter->GetCameraDistance(), 20, FColor::Red, true);
+		//DrawDebugPoint(GetWorld(), viewPointLocation + viewPointRotation.Vector() * (isAI ? 1 : shooter->GetCameraDistance()), 20, FColor::Red, true);
 	}
 	//DrawDebugCamera(GetWorld(), viewPointLocation, viewPointRotation, 90, 2.f, FColor::Red, true);
 }

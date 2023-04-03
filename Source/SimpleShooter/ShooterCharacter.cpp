@@ -6,9 +6,9 @@
 #include "EnhancedInputComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Gun.h"
+#include "SimpleShooterGameModeBase.h"
 
 AShooterCharacter::AShooterCharacter()
 {
@@ -72,9 +72,17 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	damageToApply = FMath::Min(Health, damageToApply);
 	Health -= damageToApply;
 
-	if(Health <= 0)
+	if(IsDead())
 	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		DetachFromControllerPendingDestroy();
 		GetCapsuleComponent()->DestroyComponent();
+		ASimpleShooterGameModeBase* gameMode = GetWorld()->GetAuthGameMode<ASimpleShooterGameModeBase>();
+		if (gameMode)
+		{
+			gameMode->PawnKilled(this);
+		}
+	
 	}
 	return damageToApply;
 }
