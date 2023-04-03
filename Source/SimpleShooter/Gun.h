@@ -43,5 +43,13 @@ private:
 	UParticleSystem* ImpactEffectWorld; 
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	UParticleSystem* ImpactEffectCharacter;
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	USoundBase* MuzzleSound;
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	USoundBase* ImpactSound;
+
+	bool GunTrace(FHitResult& HitResult, FVector& ShotDirection);
+
+	AController* GetOwnerController(class AShooterCharacter*& shooter) const;
 
 };
