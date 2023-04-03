@@ -8,6 +8,8 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Character.h"
 #include "Engine/DamageEvents.h"
+#include "ShooterCharacter.h"
+#include <AIController.h>
 
 // Sets default values
 AGun::AGun()
@@ -39,13 +41,16 @@ void AGun::Tick(float DeltaTime)
 
 void AGun::PullTrigger()
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s is shooting"), *GetName());
 	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, FName("MuzzleFlashSocket"));
 	
 	APawn* ownerPawn = Cast<APawn>(GetOwner());
 	if (ownerPawn == nullptr) return;
 
 	AController* ownerController = ownerPawn->GetController();
+	bool isAI = Cast<AAIController>(ownerController) != nullptr;
+
+	AShooterCharacter* shooter = Cast<AShooterCharacter>(ownerPawn);
+
 	if (ownerController == nullptr) return;
 
 	FVector viewPointLocation;
@@ -54,18 +59,21 @@ void AGun::PullTrigger()
 	ownerController->GetPlayerViewPoint(viewPointLocation, viewPointRotation);
 	FVector endPoint = viewPointLocation + viewPointRotation.Vector() * MaxRange;
 
-	//ECC_GameTraceChannel1
 	FHitResult hitResult;
-	//add 200 to the start location to be able to 
-	//start the lineTrace next to the player not behind
-	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation + viewPointRotation.Vector() * 200.f, endPoint, ECollisionChannel::ECC_GameTraceChannel1);
+
+	FCollisionQueryParams collisionParams;
+
+	collisionParams.AddIgnoredActor(this);
+	collisionParams.AddIgnoredActor(GetOwner());
+	
+	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation + viewPointRotation.Vector() * (isAI ? 1 : shooter->GetCameraDistance()), endPoint, ECollisionChannel::ECC_GameTraceChannel1, collisionParams);
 	if (isHit)
 	{
 		FVector shotDirection = -viewPointRotation.Vector();
 		FPointDamageEvent DamageEvent = FPointDamageEvent(Damage, hitResult, shotDirection, nullptr);
 
 		AActor* hitActor = hitResult.GetActor();
-		if(hitActor)
+		if(hitActor && hitActor != ownerPawn)
 		{
 			ACharacter* character = Cast<ACharacter>(hitActor);
 			UParticleSystem* particlesToSpawn;
@@ -74,7 +82,7 @@ void AGun::PullTrigger()
 			
 			hitActor->TakeDamage(Damage, DamageEvent, ownerController, this);
 		}
-		//DrawDebugPoint(GetWorld(), viewPointLocation + viewPointRotation.Vector() * 300.f, 20, FColor::Red, true);
+		//DrawDebugPoint(GetWorld(), viewPointLocation + viewPointRotation.Vector() * (isAI ? 1 : shooter->GetCameraDistance()), 20, FColor::Red, true);
 	}
 	//DrawDebugCamera(GetWorld(), viewPointLocation, viewPointRotation, 90, 2.f, FColor::Red, true);
 }
