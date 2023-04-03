@@ -8,6 +8,7 @@
 #include "ShooterCharacter.generated.h"
 
 class AGun;
+class UCameraComponent;
 
 UCLASS()
 class SIMPLESHOOTER_API AShooterCharacter : public ACharacter
@@ -46,6 +47,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool IsDead() const;
 
+	float GetCameraDistance() const;
+
+	void Shoot();
+
 private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
@@ -61,10 +66,10 @@ private:
 	float Health;
 
 	APlayerController* ShooterPlayerController;
+	UCameraComponent* camera;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
 	void LookController(const FInputActionValue& value);
 	void Jump(const FInputActionValue& value);
-	void Shoot(const FInputActionValue& value);
 };

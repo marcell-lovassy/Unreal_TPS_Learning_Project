@@ -6,12 +6,13 @@
 #include "EnhancedInputComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Gun.h"
+#include "SimpleShooterGameModeBase.h"
 
 AShooterCharacter::AShooterCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 void AShooterCharacter::BeginPlay()
@@ -41,12 +42,14 @@ void AShooterCharacter::BeginPlay()
 		FName("WeaponSocket"));
 
 	Gun->SetOwner(this);
+
+	camera = FindComponentByClass<UCameraComponent>();
+	
 }
 
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -69,9 +72,17 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	damageToApply = FMath::Min(Health, damageToApply);
 	Health -= damageToApply;
 
-	if(Health <= 0)
+	if(IsDead())
 	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		DetachFromControllerPendingDestroy();
 		GetCapsuleComponent()->DestroyComponent();
+		ASimpleShooterGameModeBase* gameMode = GetWorld()->GetAuthGameMode<ASimpleShooterGameModeBase>();
+		if (gameMode)
+		{
+			gameMode->PawnKilled(this);
+		}
+	
 	}
 	return damageToApply;
 }
@@ -79,6 +90,15 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 bool AShooterCharacter::IsDead() const
 {
 	return Health <= 0.f;
+}
+
+float AShooterCharacter::GetCameraDistance() const
+{
+	if (camera) 
+	{
+		return FVector::Dist(camera->GetComponentLocation(), GetActorLocation());
+	}
+	return 0.f;
 }
 
 void AShooterCharacter::Move(const FInputActionValue& value)
@@ -107,7 +127,7 @@ void AShooterCharacter::Jump(const FInputActionValue& value)
 	ACharacter::Jump();
 }
 
-void AShooterCharacter::Shoot(const FInputActionValue& value)
+void AShooterCharacter::Shoot()
 {
 	Gun->PullTrigger();
 }
