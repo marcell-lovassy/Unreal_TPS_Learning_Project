@@ -11,7 +11,6 @@
 AShooterCharacter::AShooterCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 void AShooterCharacter::BeginPlay()
@@ -46,7 +45,6 @@ void AShooterCharacter::BeginPlay()
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -71,6 +69,13 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 
 	if(Health <= 0)
 	{
+		ASimpleShooterGameModeBase* gameMode = GetWorld()->GetAuthGameMode<ASimpleShooterGameModeBase>();
+		if (gameMode)
+		{
+			gameMode->PawnKilled(this);
+		}
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		DetachFromControllerPendingDestroy();
 		GetCapsuleComponent()->DestroyComponent();
 	}
 	return damageToApply;
@@ -107,7 +112,7 @@ void AShooterCharacter::Jump(const FInputActionValue& value)
 	ACharacter::Jump();
 }
 
-void AShooterCharacter::Shoot(const FInputActionValue& value)
+void AShooterCharacter::Shoot()
 {
 	Gun->PullTrigger();
 }
