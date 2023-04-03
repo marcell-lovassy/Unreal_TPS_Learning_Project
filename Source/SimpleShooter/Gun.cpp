@@ -39,50 +39,66 @@ void AGun::Tick(float DeltaTime)
 
 }
 
-void AGun::PullTrigger()
+bool AGun::GunTrace(FHitResult& HitResult, FVector& ShotDirection)
 {
-	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, FName("MuzzleFlashSocket"));
-	
-	APawn* ownerPawn = Cast<APawn>(GetOwner());
-	if (ownerPawn == nullptr) return;
+	AShooterCharacter* Shooter;
+	AController* OwnerController = GetOwnerController(Shooter);
 
-	AController* ownerController = ownerPawn->GetController();
-	bool isAI = Cast<AAIController>(ownerController) != nullptr;
-
-	AShooterCharacter* shooter = Cast<AShooterCharacter>(ownerPawn);
-
-	if (ownerController == nullptr) return;
+	if (OwnerController == nullptr) return false;
+	bool isAI = Cast<AAIController>(OwnerController) != nullptr;
 
 	FVector viewPointLocation;
 	FRotator viewPointRotation;
 
-	ownerController->GetPlayerViewPoint(viewPointLocation, viewPointRotation);
+	OwnerController->GetPlayerViewPoint(viewPointLocation, viewPointRotation);
 	FVector endPoint = viewPointLocation + viewPointRotation.Vector() * MaxRange;
-
-	FHitResult hitResult;
 
 	FCollisionQueryParams collisionParams;
 
 	collisionParams.AddIgnoredActor(this);
 	collisionParams.AddIgnoredActor(GetOwner());
-	
-	bool isHit = GetWorld()->LineTraceSingleByChannel(hitResult, viewPointLocation + viewPointRotation.Vector() * (isAI ? 1 : shooter->GetCameraDistance()), endPoint, ECollisionChannel::ECC_GameTraceChannel1, collisionParams);
-	if (isHit)
-	{
-		FVector shotDirection = -viewPointRotation.Vector();
-		FPointDamageEvent DamageEvent = FPointDamageEvent(Damage, hitResult, shotDirection, nullptr);
 
-		AActor* hitActor = hitResult.GetActor();
-		if(hitActor && hitActor != ownerPawn)
+	ShotDirection = -viewPointRotation.Vector();
+
+	return GetWorld()->LineTraceSingleByChannel(HitResult, viewPointLocation + viewPointRotation.Vector() * (isAI ? 1 : Shooter->GetCameraDistance()), endPoint, ECollisionChannel::ECC_GameTraceChannel1, collisionParams);
+}
+
+AController* AGun::GetOwnerController(AShooterCharacter*& Shooter) const
+{
+	APawn* ownerPawn = Cast<APawn>(GetOwner());
+	if (ownerPawn == nullptr) return nullptr;
+
+	Shooter = Cast<AShooterCharacter>(ownerPawn);
+	AController* ownerController = ownerPawn->GetController();
+
+	return ownerController;
+}
+
+void AGun::PullTrigger()
+{
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, FName("MuzzleFlashSocket"));
+	UGameplayStatics::SpawnSoundAttached(MuzzleSound, Mesh, FName("MuzzleFlashSocket"));
+
+	FHitResult HitResult;
+	FVector ShotDirection;
+
+	if (GunTrace(HitResult, ShotDirection))
+	{
+		AShooterCharacter* Shooter;
+		AController* OwnerController = GetOwnerController(Shooter);
+		FPointDamageEvent DamageEvent = FPointDamageEvent(Damage, HitResult, ShotDirection, nullptr);
+
+		AActor* hitActor = HitResult.GetActor();
+		if(hitActor)
 		{
 			ACharacter* character = Cast<ACharacter>(hitActor);
-			UParticleSystem* particlesToSpawn;
-			particlesToSpawn = character ? ImpactEffectCharacter : ImpactEffectWorld;
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), particlesToSpawn, hitResult.ImpactPoint, shotDirection.Rotation());
-			
-			hitActor->TakeDamage(Damage, DamageEvent, ownerController, this);
+			if (!character) 
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, HitResult.ImpactPoint);
+			}
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), character ? ImpactEffectCharacter : ImpactEffectWorld, HitResult.ImpactPoint, ShotDirection.Rotation());
+			hitActor->TakeDamage(Damage, DamageEvent, OwnerController, this);
 		}
 		//DrawDebugPoint(GetWorld(), viewPointLocation + viewPointRotation.Vector() * (isAI ? 1 : shooter->GetCameraDistance()), 20, FColor::Red, true);
 	}
-	//DrawDebugCamera(GetWorld(), viewPointLocation, viewPointRotation, 90, 2.f, FColor::Red, true);
 }
